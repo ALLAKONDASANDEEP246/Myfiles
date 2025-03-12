@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bio Page</title>
+    <style>
+        body {
+            font-family: Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e0f7fa;
+            text-align: center;
+        }
+        .bio-container {
+            width: 80%;
+            max-width: 500px;
+            margin: 50px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        h2 {
+            color: #00796b;
+        }
+        p {
+            color: #444;
+        }
+        .node-name, .pod-name {
+            font-size: 20px; /* Font size for all messages */
+            color: #333; /* Text color for contrast */
+            margin: 10px 0; /* Margin for spacing */
+            }
+    </style>
+</head>
+<body>
+    <div class="bio-container">
+        <h2>Sandeep Allakonda</h2>
+        <p>Python Developer</p>
+        <p>Passionate about crafting beautiful and intuitive web experiences.</p>
+        <div>
+            <div class="node-name">
+                Node Name: {{NODE_NAME}}
+            </div>       
+            <div class="pod-name">
+                Pod Name: {{POD_NAME}}
+            </div>
+        </div>
+    </div>
+</body>
+<footer>
+    <p> ©SANDEEP ALLAKONDA.</p>
+</footer>
+</html>

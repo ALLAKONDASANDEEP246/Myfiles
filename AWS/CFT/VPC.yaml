@@ -1,0 +1,109 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation Template to Create VPC and EC2 Instance
+
+Resources:
+  # Create VPC
+  MyTestVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: MyTestVPC
+
+  # Create an Internet Gateway
+  MyTestInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: MyTestInternetGateway
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref MyTestVPC
+      InternetGatewayId: !Ref MyTestInternetGateway
+
+  # Create a Public Subnet
+  MyTestPublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyTestVPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: MyTestPublicSubnet
+
+  # Create a Route Table
+  MyTestPublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MyTestVPC
+      Tags:
+        - Key: Name
+          Value: MyTestPublicRouteTable
+
+  # Create a Route for Internet Access
+  MyTestPublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref MyTestPublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref MyTestInternetGateway
+
+  # Associate Subnet with Route Table
+  MyTestPublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref MyTestPublicSubnet
+      RouteTableId: !Ref MyTestPublicRouteTable
+
+  # Create Security Group
+  MyTestSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH and HTTP access
+      VpcId: !Ref MyTestVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0  # Allows SSH from anywhere
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0  # Allows HTTP from anywhere
+      Tags:
+        - Key: Name
+          Value: MyTestSecurityGroup
+
+  # Create EC2 Instance
+  MyTestEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0d682f26195e9ec0f  # Amazon Linux 2 AMI (Update with the latest AMI ID)
+      KeyName: login # Change to your key pair name
+      SubnetId: !Ref MyTestPublicSubnet
+      SecurityGroupIds:
+        - !Ref MyTestSecurityGroup
+      Tags:
+        - Key: Name
+          Value: MyTestEC2Instance
+
+Outputs:
+  VPCId:
+    Description: VPC ID
+    Value: !Ref MyTestVPC
+  SubnetId:
+    Description: Public Subnet ID
+    Value: !Ref MyTestPublicSubnet
+  EC2InstanceId:
+    Description: EC2 Instance ID
+    Value: !Ref MyTestEC2Instance

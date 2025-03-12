@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description:  Creating VPC, InternetGateWay, Subnet, RouteTable, SecurityGroup and And attaching IGW to VPC, allow access internetgateway to routetable and attach subnet to routetable
+
+Resources:
+  #creating VPC
+  myVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      Tags:
+       - Key: Name
+         Value: myVPC
+
+  #create InternetGateWay
+  myInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: myInternetGateway
+
+  #Attach IGW to VPC
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref myVPC
+      InternetGatewayId: !Ref myInternetGateway
+
+  #Create a PublicSubnet
+  mySubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref myVPC
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags:
+      - Key: Name
+        Value: mySubnet    
+
+  #Create a RouteTable
+  myRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref myVPC
+      Tags:
+      - Key: Name
+        Value: myRouteTable
+
+  #allow access to routable to IGW (Route)
+  myRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+       RouteTableId: !Ref myRouteTable
+       DestinationCidrBlock: 0.0.0.0/0
+       GatewayId: !Ref myInternetGateway    
+
+  #Attach RouteTable to Subnet    
+  mySubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        !Ref mySubnet
+      RouteTableId:
+        !Ref myRouteTable
+
+  #create Security group
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to client host
+      VpcId: !Ref myVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+  
+  #Create Ec2 Instance   
+  myInstance:
+    Type: 'AWS::EC2::Instance'
+    Properties: 
+      ImageId: ami-0d682f26195e9ec0f
+      InstanceType: t2.micro
+      KeyName: login
+      SecurityGroupIds:
+        - !Ref InstanceSecurityGroup
+      Tags: 
+        - Key: Name
+          Value:  myInstance
+Outputs:
+  VPCId:
+    Description: VPC ID
+    Value: !Ref myVPC
+  SubnetId:
+    Description: Public Subnet ID
+    Value: !Ref mySubnet
+  EC2InstanceId:
+    Description: EC2 Instance ID
+    Value: !Ref myInstance
+    

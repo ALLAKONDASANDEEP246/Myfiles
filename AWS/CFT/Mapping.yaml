@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "CloudFormation Template to create an EC2 instance"
+
+Mappings: 
+  AMIIDMap: 
+    us-east-1:
+      ImageId: ami-05b10e08d247fb927
+    ap-south-1:
+      ImageId: ami-0d682f26195e9ec0f  
+
+  SubnetMapping:
+    us-east-1:
+      SubnetId: subnet-044828b5768fe4179
+    ap-south-1:
+      SubnetId: subnet-0b99d15fe1d4dfbec   
+
+  InstanceName:
+    us-east-1:
+      Name: EastName
+    ap-south-1:
+      Name: SouthName 
+
+
+Resources:
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap [AMIIDMap, !Ref "AWS::Region", ImageId]
+      InstanceType: t2.micro
+      SubnetId: !FindInMap [SubnetMapping, !Ref "AWS::Region", SubnetId]
+      Tags:
+        - Key: Name
+          Value: !FindInMap [InstanceName, !Ref "AWS::Region", Name]
