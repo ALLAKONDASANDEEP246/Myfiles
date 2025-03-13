@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation Template to create an EC2 instance and EBS Volume, AWS::EC2::VolumeAttachment
+
+Resources:
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: ap-south-1a
+      ImageId:  ami-05c179eced2eb9b5b
+      InstanceType: t2.micro
+
+  MyEBSVolume:
+    Type: AWS::EC2::Volume
+    Properties:
+      AvailabilityZone: !GetAtt MyEC2Instance.AvailabilityZone
+      VolumeType: io1
+      Size: 100
+      Iops: 100 
+
+  MountPoint: 
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      Device: /dev/sdh
+      InstanceId: !Ref MyEC2Instance
+      VolumeId: !Ref MyEBSVolume
+            
